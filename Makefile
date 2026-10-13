@@ -148,7 +148,7 @@ lint: lint-rs lint-py lint-md ## Lint the code with ruff, clippy and mdformat
 
 .PHONY: test-no-features
 test-no-features: ## Run rust tests without any features enabled
-	cargo test -p monty -p monty-fs
+	cargo test -p monty -p monty-fs -p monty-types
 	cargo run -p monty-datatest
 
 .PHONY: test-memory-model-checks
@@ -181,6 +181,14 @@ test-type-checking: ## Run rust tests on monty-type-checking
 test-subprocess: ## Run subprocess protocol, child-mode, and worker-pool tests
 	cargo build -p monty-runtime
 	cargo test -p monty-proto -p monty-runtime -p monty-pool --features monty-pool/telemetry
+
+.PHONY: test-restore-policy
+test-restore-policy: ## Verify snapshot limits with tracker, protocol, and real-process regressions
+	cargo build -p monty-runtime
+	cargo test -p monty-types --test resource_limits
+	cargo test -p monty-proto --features worker --test dispatch restore_caps_idle_and_suspended_resource_limits
+	cargo test -p monty-pool --features telemetry --test pool_test restored_session_cannot_raise_the_destination_memory_budget
+	cargo test -p monty-pool --features telemetry --test pool_test a_load_reply_cannot_loosen_the_feed_backstop
 
 .PHONY: pytest
 pytest: ## Run Python tests with pytest
